@@ -1,15 +1,14 @@
-import * as React from "react"
-import {useRef} from "react";
+import { FC, FormEvent, useRef } from "react";
 import {Box, Button, Stack, TextField} from "@mui/material";
 
 export interface LoginProps {
     setLoginCallback: (login: string) => void
 }
 
-export const Login: React.FC<LoginProps> = ({ setLoginCallback }) => {
+export const Login: FC<LoginProps> = ({ setLoginCallback }) => {
     const loginRef = useRef<HTMLInputElement>(null)
 
-    const onFormSubmit = (e: React.FormEvent<HTMLFormElement>)  => {
+    const onFormSubmit = (e: FormEvent<HTMLFormElement>)  => {
         e.preventDefault()
         setLoginCallback(loginRef.current?.value || "")
     }

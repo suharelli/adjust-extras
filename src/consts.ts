@@ -1,0 +1,1 @@
+export const adjustTokenKey = "adjust-token"

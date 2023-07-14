@@ -1,73 +1,64 @@
-import React, {useRef, useState} from "react";
-import axios, {AxiosError} from "axios";
-import {Box, List, ListItem, ListItemText, Stack, TextField} from "@mui/material";
-import {LoadingButton} from "@mui/lab";
-
-export interface BlacklistFormProps {
-    token: string
-}
-
-export const BlackListForm: React.FC<BlacklistFormProps> = ({ token }) => {
-    const [blocked, setBlocked] = useState<string[]>([])
-    const idListRef = useRef<HTMLTextAreaElement>(null)
-    const [errors, setErrors] = useState<string[]>([])
-    const [loading, setLoading] = useState<boolean>(false)
+import { FC, FormEvent, useRef, useState } from "react";
+import { Alert, AlertTitle, Box, Stack, TextField } from "@mui/material";
+import { LoadingButton } from "@mui/lab";
+import { adjustApi } from "../../api/adjust.api";
 
 
-    const blockCampaigns = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault()
+export const BlackListForm: FC = () => {
+  const [blocked, setBlocked] = useState<string[]>([])
+  const idListRef = useRef<HTMLTextAreaElement>(null)
+  const [errors, setErrors] = useState<{id: string, value: string}[]>([])
+  const [loading, setLoading] = useState<boolean>(false)
+  const [blackListRequest] = adjustApi.useBlackListMutation()
 
-        const idList = idListRef.current
-            ? idListRef.current.value.split("\n")
-            : []
 
-        const toBlock = idList.map(v => v.trim()).filter(v => v.length)
+  const blockCampaigns = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
 
-        setLoading(true)
+    const idList = idListRef.current
+      ? idListRef.current.value.split("\n")
+      : []
 
-        await Promise.all(toBlock.map(async id => {
-            try {
-                await axios.post(
-                    `https://api.adjust.com/dashboard/api/trackers/${id}/blacklist`,
-                    {},
-                    {
-                        headers: {
-                            Authorization: `Token token=${token}`
-                        }
-                    }
-                )
+    const toBlock = idList.map(v => v.trim()).filter(v => v.length)
 
-                setBlocked(prev => [...prev, id])
-            } catch (error) {
-                if (error instanceof AxiosError) {
-                    const message = error.message
-                    setErrors(prev => [...prev, `${id}: ${message}`])
-                }
-            }
-        }))
+    setLoading(true)
 
-        setLoading(false)
-    }
+    await Promise.all(toBlock.map(async id => blackListRequest(id)
+      .unwrap()
+      .then(() => {
+        setBlocked(prev => [...prev.filter(v => v !== id), id])
+      })
+      .catch(error => {
+        setErrors(prev => [...prev.filter(v => v.id !== id), { id, value: `${id}: ${error.error}` }])
+      })
+    ))
 
-    return <Box>
-        <Box component="form" onSubmit={blockCampaigns}>
-            <Stack direction="column" spacing={2}>
-                <TextField
-                    multiline
-                    inputRef={idListRef}
-                    minRows="3"
-                    variant="outlined"
-                    label="List of ids"
-                    maxRows="10"
-                />
-                <LoadingButton loading={loading} type="submit" variant="outlined">Block</LoadingButton>
-            </Stack>
-        </Box>
-        <List>
-            {blocked.map(v => (<ListItem dense={true} key={v}><ListItemText>{v} blocked</ListItemText></ListItem>))}
-        </List>
-        <List>
-            {errors.map(v => <ListItem dense={true} key={v}><ListItemText>{v}</ListItemText></ListItem>)}
-        </List>
+    setLoading(false)
+  }
+
+  const closeError = (id: string) => {
+    setErrors(prev => prev.filter(v => v.id !== id))
+  }
+
+  const closeBlocked = (id: string) => {
+    setBlocked(prev => prev.filter(v => v !== id))
+  }
+
+  return <Box>
+    <Box component="form" onSubmit={blockCampaigns}>
+      <Stack direction="column" spacing={2}>
+        <TextField
+          multiline
+          inputRef={idListRef}
+          minRows="3"
+          variant="outlined"
+          label="List of ids"
+          maxRows="10"
+        />
+        <LoadingButton loading={loading} type="submit" variant="outlined">Block</LoadingButton>
+        {blocked.map(id => <Alert key={id} onClose={() => closeBlocked(id)} severity={"success"}>{id} blocked</Alert>)}
+        {errors.map(v => <Alert key={v.id} onClose={() => closeError(v.id)} severity={"error"}><AlertTitle>Error</AlertTitle>{v.value}</Alert>)}
+      </Stack>
     </Box>
+  </Box>
 }
