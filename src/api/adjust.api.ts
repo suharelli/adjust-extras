@@ -1,14 +1,13 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { adjustTokenKey } from "../consts";
+import { RootState } from "../store/store";
 
 export const adjustApi = createApi({
   reducerPath: "adjustApi",
   baseQuery: fetchBaseQuery({
     baseUrl: "https://api.adjust.com/dashboard/api/",
     credentials: "include",
-    prepareHeaders: headers => {
-      // todo some kind of abstraction
-      const token = localStorage.getItem(adjustTokenKey)
+    prepareHeaders: (headers, api) => {
+      const token = (api.getState() as RootState).auth.adjustToken
       if (token) {
         headers.set("Authorization", `Token token=${token}`)
       }

@@ -1,8 +1,10 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import { adjustApi } from "../api/adjust.api";
+import { authSlice } from "../reducers/auth.slice";
 
 const rootReducer = combineReducers({
   [adjustApi.reducerPath]: adjustApi.reducer,
+  [authSlice.name]: authSlice.reducer,
 })
 
 export const store = configureStore({
@@ -12,3 +14,6 @@ export const store = configureStore({
       adjustApi.middleware
     )
 })
+
+export type AppDispatch = typeof store.dispatch
+export type RootState = ReturnType<typeof store.getState>
