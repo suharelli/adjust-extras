@@ -5,7 +5,6 @@ export const adjustApi = createApi({
   reducerPath: "adjustApi",
   baseQuery: fetchBaseQuery({
     baseUrl: "https://api.adjust.com/dashboard/api/",
-    credentials: "include",
     prepareHeaders: (headers, api) => {
       const token = (api.getState() as RootState).auth.adjustToken
       if (token) {
@@ -21,6 +20,12 @@ export const adjustApi = createApi({
         url: `trackers/${id}/blacklist`,
         method: "POST"
       })
-    })
+    }),
+    unblacklist: builder.mutation<void, string>({
+      query: (id: string) => ({
+        url: `trackers/${id}/unblacklist`,
+        method: "POST",
+      })
+    }),
   }),
 })

@@ -1,15 +1,18 @@
 import { FC, FormEvent, useRef, useState } from "react";
 import { Alert, AlertTitle, Box, Stack, TextField } from "@mui/material";
 import { LoadingButton } from "@mui/lab";
-import { adjustApi } from "../../api/adjust.api";
+import { MutationTrigger } from "@reduxjs/toolkit/dist/query/react/buildHooks";
 
+export interface BlacklistFormProps {
+  action: MutationTrigger<any>
+  actionText: string
+}
 
-export const BlackListForm: FC = () => {
+export const BlackListForm: FC<BlacklistFormProps> = ({action, actionText}) => {
   const [blocked, setBlocked] = useState<string[]>([])
   const idListRef = useRef<HTMLTextAreaElement>(null)
-  const [errors, setErrors] = useState<{id: string, value: string}[]>([])
+  const [errors, setErrors] = useState<{ id: string, value: string }[]>([])
   const [loading, setLoading] = useState<boolean>(false)
-  const [blackListRequest] = adjustApi.useBlackListMutation()
 
 
   const blockCampaigns = async (e: FormEvent<HTMLFormElement>) => {
@@ -23,13 +26,13 @@ export const BlackListForm: FC = () => {
 
     setLoading(true)
 
-    await Promise.all(toBlock.map(async id => blackListRequest(id)
+    await Promise.all(toBlock.map(async id => action(id)
       .unwrap()
       .then(() => {
         setBlocked(prev => [...prev.filter(v => v !== id), id])
       })
       .catch(error => {
-        setErrors(prev => [...prev.filter(v => v.id !== id), { id, value: `${id}: ${error.error}` }])
+        setErrors(prev => [...prev.filter(v => v.id !== id), {id, value: `${id}: ${error.error ?? error.data?.error}`}])
       })
     ))
 
@@ -55,9 +58,10 @@ export const BlackListForm: FC = () => {
           label="List of ids"
           maxRows="10"
         />
-        <LoadingButton loading={loading} type="submit" variant="outlined">Block</LoadingButton>
+        <LoadingButton loading={loading} type="submit" variant="outlined">{actionText}</LoadingButton>
         {blocked.map(id => <Alert key={id} onClose={() => closeBlocked(id)} severity={"success"}>{id} blocked</Alert>)}
-        {errors.map(v => <Alert key={v.id} onClose={() => closeError(v.id)} severity={"error"}><AlertTitle>Error</AlertTitle>{v.value}</Alert>)}
+        {errors.map(v => <Alert key={v.id} onClose={() => closeError(v.id)}
+                                severity={"error"}><AlertTitle>Error</AlertTitle>{v.value}</Alert>)}
       </Stack>
     </Box>
   </Box>
