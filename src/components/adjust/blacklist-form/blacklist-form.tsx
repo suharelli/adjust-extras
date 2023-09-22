@@ -6,9 +6,10 @@ import { MutationTrigger } from "@reduxjs/toolkit/dist/query/react/buildHooks";
 export interface BlacklistFormProps {
   action: MutationTrigger<any>
   actionText: string
+  successText: string
 }
 
-export const BlackListForm: FC<BlacklistFormProps> = ({action, actionText}) => {
+export const BlackListForm: FC<BlacklistFormProps> = ({action, actionText, successText}) => {
   const [blocked, setBlocked] = useState<string[]>([])
   const idListRef = useRef<HTMLTextAreaElement>(null)
   const [errors, setErrors] = useState<{ id: string, value: string }[]>([])
@@ -59,7 +60,7 @@ export const BlackListForm: FC<BlacklistFormProps> = ({action, actionText}) => {
           maxRows="10"
         />
         <LoadingButton loading={loading} type="submit" variant="outlined">{actionText}</LoadingButton>
-        {blocked.map(id => <Alert key={id} onClose={() => closeBlocked(id)} severity={"success"}>{id} blocked</Alert>)}
+        {blocked.map(id => <Alert key={id} onClose={() => closeBlocked(id)} severity={"success"}>{id} {successText}</Alert>)}
         {errors.map(v => <Alert key={v.id} onClose={() => closeError(v.id)}
                                 severity={"error"}><AlertTitle>Error</AlertTitle>{v.value}</Alert>)}
       </Stack>

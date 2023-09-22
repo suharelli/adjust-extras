@@ -24,10 +24,10 @@ export const Adjust: FC = () => {
           </TabList>
         </Box>
         <TabPanel value="block">
-          <BlackListForm action={blackListRequest} actionText="Block" />
+          <BlackListForm action={blackListRequest} actionText="Block" successText="blocked" />
         </TabPanel>
         <TabPanel value="unblock">
-          <BlackListForm action={unblackListRequest} actionText="Unblock" />
+          <BlackListForm action={unblackListRequest} actionText="Unblock" successText="unblocked" />
         </TabPanel>
       </TabContext>
     </Box>
